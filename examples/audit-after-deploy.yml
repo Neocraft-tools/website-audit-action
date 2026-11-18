@@ -1,0 +1,33 @@
+# Audit the production site after each deployment and once a week.
+name: Website audit
+on:
+  deployment_status:
+  schedule:
+    - cron: "0 6 * * 1"   # Mondays 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    if: github.event_name != 'deployment_status' || github.event.deployment_status.state == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - id: audit
+        uses: Neocraft-tools/website-audit-action@v1
+        with:
+          apify-token: ${{ secrets.APIFY_TOKEN }}
+          url: ${{ github.event.deployment_status.environment_url || 'https://www.example.com' }}
+          max-pages: 10
+          min-score: 70
+          fail-on-critical: true
+          max-score-drop: 5
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: website-audit
+          path: website-audit.json
+      - if: always()
+        run: echo "Score ${{ steps.audit.outputs.score }}, critical ${{ steps.audit.outputs.critical }}, delta ${{ steps.audit.outputs.score-delta }}"

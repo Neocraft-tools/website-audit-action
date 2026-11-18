@@ -1,0 +1,102 @@
+name: "Website Audit: SEO, AI Search (GEO), Security"
+description: "Audit a website on every deploy (SEO, AI-search visibility, security, speed, accessibility) and fail on low score, critical issues or regressions."
+author: "Neocraft"
+branding:
+  icon: "check-circle"
+  color: "green"
+
+inputs:
+  apify-token:
+    description: "Your Apify API token (store it as a secret). Runs are billed to this Apify account."
+    required: true
+  url:
+    description: "URL to audit. Several URLs: separate with commas or new lines (each one is a separate site audit)."
+    required: true
+  max-pages:
+    description: "Pages crawled per site. 10 are included in the per-site price; each extra page costs $0.01."
+    required: false
+    default: "10"
+  min-score:
+    description: "Fail when the overall score (0-100) of any site is below this value. 0 disables the gate."
+    required: false
+    default: "0"
+  fail-on-critical:
+    description: "Fail when the audit reports at least one critical issue (e.g. actively exploited CMS vulnerability, expired SSL)."
+    required: false
+    default: "true"
+  max-score-drop:
+    description: "Fail when the score dropped by at least this many points since the previous audit with the same monitor-id. 0 disables the gate."
+    required: false
+    default: "5"
+  monitor-id:
+    description: "History key used to compare with the previous audit (stored in your Apify account). Defaults to the repository name."
+    required: false
+    default: ""
+  language:
+    description: "Report language: en or fr."
+    required: false
+    default: "en"
+  pagespeed:
+    description: "Also query Google PageSpeed Insights (slower)."
+    required: false
+    default: "false"
+  extra-input:
+    description: "Optional JSON object merged into the Actor input (any field of neocraft/website-audit-all-in-one)."
+    required: false
+    default: ""
+  max-total-charge-usd:
+    description: "Hard spend cap for the run in USD. 'auto' = $0.49 per site + $0.01 per page above 10 + $0.05 margin."
+    required: false
+    default: "auto"
+  timeout-secs:
+    description: "Maximum run time of the Actor in seconds."
+    required: false
+    default: "1200"
+  output-file:
+    description: "Where to save the full JSON results."
+    required: false
+    default: "website-audit.json"
+
+outputs:
+  passed:
+    description: "true when all gates passed."
+    value: ${{ steps.run.outputs.passed }}
+  score:
+    description: "Lowest overall score (0-100) among the audited sites."
+    value: ${{ steps.run.outputs.score }}
+  critical:
+    description: "Number of critical issues (all sites)."
+    value: ${{ steps.run.outputs.critical }}
+  score-delta:
+    description: "Lowest score change since the previous audit (0 on the first audit)."
+    value: ${{ steps.run.outputs.score-delta }}
+  summary:
+    description: "Compact JSON summary per site."
+    value: ${{ steps.run.outputs.summary }}
+  results-file:
+    description: "Path of the full JSON results."
+    value: ${{ steps.run.outputs.results-file }}
+  run-url:
+    description: "Apify Console URL of the run."
+    value: ${{ steps.run.outputs.run-url }}
+
+runs:
+  using: "composite"
+  steps:
+    - id: run
+      shell: bash
+      run: bash "${GITHUB_ACTION_PATH}/entrypoint.sh"
+      env:
+        APIFY_TOKEN: ${{ inputs.apify-token }}
+        INPUT_URL: ${{ inputs.url }}
+        INPUT_MAX_PAGES: ${{ inputs.max-pages }}
+        INPUT_MIN_SCORE: ${{ inputs.min-score }}
+        INPUT_FAIL_ON_CRITICAL: ${{ inputs.fail-on-critical }}
+        INPUT_MAX_SCORE_DROP: ${{ inputs.max-score-drop }}
+        INPUT_MONITOR_ID: ${{ inputs.monitor-id }}
+        INPUT_LANGUAGE: ${{ inputs.language }}
+        INPUT_PAGESPEED: ${{ inputs.pagespeed }}
+        INPUT_EXTRA_INPUT: ${{ inputs.extra-input }}
+        INPUT_MAX_TOTAL_CHARGE_USD: ${{ inputs.max-total-charge-usd }}
+        INPUT_TIMEOUT_SECS: ${{ inputs.timeout-secs }}
+        INPUT_OUTPUT_FILE: ${{ inputs.output-file }}

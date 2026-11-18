@@ -1,0 +1,31 @@
+# Manual self-test of this action. Copy to .github/workflows/self-test.yml in this repository;
+# it runs only when started by hand from the Actions tab.
+# Requires a repository secret APIFY_TOKEN; cheap inputs (a few cents at most).
+name: Self-test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  self-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - id: action
+        uses: ./
+        with:
+          apify-token: ${{ secrets.APIFY_TOKEN }}
+          url: https://example.com
+          max-pages: 2
+          min-score: 0
+          fail-on-critical: false
+          max-score-drop: 0
+      - name: Show outputs
+        run: |
+          echo "run-url: ${{ steps.action.outputs.run-url }}"
+          echo "results: ${{ steps.action.outputs.results-file }}"
+          test -s "${{ steps.action.outputs.results-file }}"
