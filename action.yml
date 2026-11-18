@@ -1,5 +1,5 @@
 name: "Website Audit: SEO, AI Search (GEO), Security"
-description: "Audit a website on every deploy (SEO, AI-search visibility, security, speed, accessibility) and fail on low score, critical issues or regressions."
+description: "Audit a site on every deploy (SEO, AI-search visibility, security, speed) and fail on low score or regressions."
 author: "Neocraft"
 branding:
   icon: "check-circle"
